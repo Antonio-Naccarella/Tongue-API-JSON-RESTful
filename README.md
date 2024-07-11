@@ -41,7 +41,8 @@ Tongue wants to propose a model of rapid information accessible to all from smar
     ```
     node app
     ```
-          <!-- USAGE -->
+
+ <!-- USAGE -->
 
 ## Usage
 
