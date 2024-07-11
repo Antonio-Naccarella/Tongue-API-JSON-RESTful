@@ -28,11 +28,11 @@ async function getPosts(req, res) {
       posts = await Post.findByDate(date)
     }
     if (posts.length === 0) {
-      return res.status(200).json({ mssg: "No posts in the db" })
+      return res.status(404).json({ mssg: "No posts in the db" })
     }
     res.status(200).json(posts)
   } catch (error) {
-    res.status(404).json({ error: error.message })
+    res.status(400).json({ error: error.message })
   }
 }
 
@@ -41,13 +41,17 @@ async function getPosts(req, res) {
 async function getPost(req, res) {
   const { id } = req.params
   if (!mongoose.isValidObjectId(id)) {
-    return res.status(404).json("Please enter a valid id.")
+    return res.status(400).json("Please enter a valid id.")
   }
-  const post = await Post.findById(id).populate("user")
-  if (!post) {
-    return res.status(404).json({ error: "No such post." })
+  try {
+    const post = await Post.findById(id).populate("user")
+    if (!post) {
+      return res.status(404).json({ error: "No such post." })
+    }
+    res.status(200).json(post)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
   }
-  res.status(200).json(post)
 }
 
 // update a single post
@@ -56,20 +60,23 @@ async function updatePost(req, res) {
   const { id } = req.params
   const { title, user } = req.body
   if (!mongoose.isValidObjectId(id)) {
-    return res.status(404).json("Please enter a valid id.")
+    return res.status(400).json("Please enter a valid id.")
   }
+  try {
+    const post = await Post.findById(id)
 
-  const post = await Post.findById(id)
+    post.title = title || post.title
+    post.user = user || post.user
+    await post.save()
+    await post.populate("user")
 
-  post.title = title || post.title
-  post.user = user || post.user
-  await post.save()
-  await post.populate("user")
-
-  if (!post) {
-    return res.status(404).json({ error: "No such post." })
+    if (!post) {
+      return res.status(404).json({ error: "No such post." })
+    }
+    res.status(200).json(post)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
   }
-  res.status(200).json(post)
 }
 
 // delete a single post
@@ -77,15 +84,18 @@ async function updatePost(req, res) {
 async function deletePost(req, res) {
   const { id } = req.params
   if (!mongoose.isValidObjectId(id)) {
-    return res.status(404).json("Please enter a valid id.")
+    return res.status(400).json("Please enter a valid id.")
   }
+  try {
+    const post = await Post.findByIdAndDelete(id)
 
-  const post = await Post.findByIdAndDelete(id)
-
-  if (!post) {
-    return res.status(404).json({ error: "No such post." })
+    if (!post) {
+      return res.status(404).json({ error: "No such post." })
+    }
+    res.status(200).json(post)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
   }
-  res.status(200).json(post)
 }
 
 module.exports = {

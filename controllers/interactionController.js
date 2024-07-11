@@ -11,7 +11,7 @@ async function createInteraction(req, res) {
     await interaction.populate(["post", "user"])
     res.status(201).json(interaction)
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(400).json({ error: error.message })
   }
 }
 
@@ -19,23 +19,26 @@ async function createInteraction(req, res) {
 async function getInteractions(req, res) {
   const { date } = req.query
   const { city } = req.query
+  try {
+    let interactions = await Interaction.find()
+      .sort({ createdAt: -1 })
+      .populate(["post", "user"])
 
-  let interactions = await Interaction.find()
-    .sort({ createdAt: -1 })
-    .populate(["post", "user"])
+    if (date) {
+      interactions = await Interaction.findByDate(date)
+    }
+    if (city) {
+      interactions = await Interaction.findByCity(city)
+    }
 
-  if (date) {
-    interactions = await Interaction.findByDate(date)
+    if (interactions.length === 0) {
+      return res.status(404).json("No interactions in the db.")
+    }
+
+    res.status(200).json(interactions)
+  } catch (error) {
+    res.status(400).json({ error: error.message })
   }
-  if (city) {
-    interactions = await Interaction.findByCity(city)
-  }
-
-  if (interactions.length === 0) {
-    return res.status(200).json("No interactions in the db.")
-  }
-
-  res.status(200).json(interactions)
 }
 
 // update a single interaction
@@ -44,7 +47,7 @@ async function updateInteraction(req, res) {
   const { type, post, user } = req.body
 
   if (!mongoose.isValidObjectId(id)) {
-    return res.status(404).json({ error: "Please enter a valid id." })
+    return res.status(400).json({ error: "Please enter a valid id." })
   }
   try {
     const interaction = await Interaction.findById(id)
@@ -59,7 +62,7 @@ async function updateInteraction(req, res) {
     }
     res.status(200).json(interaction)
   } catch (error) {
-    res.status(404).json({ error: error.message })
+    res.status(400).json({ error: error.message })
   }
 }
 
@@ -68,7 +71,7 @@ async function deleteInteraction(req, res) {
   const { id } = req.params
 
   if (!mongoose.isValidObjectId(id)) {
-    return res.status(404).json({ error: "Please enter a valid id." })
+    return res.status(400).json({ error: "Please enter a valid id." })
   }
   try {
     const interaction = await Interaction.findByIdAndDelete(id)
@@ -80,7 +83,7 @@ async function deleteInteraction(req, res) {
     }
     res.status(200).json(interaction)
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(400).json({ error: error.message })
   }
 }
 
@@ -89,9 +92,4 @@ module.exports = {
   getInteractions,
   updateInteraction,
   deleteInteraction,
-}
-
-function getFullDate(date) {
-  const fullDay = `${date.getDay()}-${date.getMonth()}-${date.getFullYear()}`
-  return fullDay
 }

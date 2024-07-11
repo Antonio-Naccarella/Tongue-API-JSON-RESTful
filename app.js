@@ -22,8 +22,8 @@ mongoose
 app.use(express.json())
 
 // routes
-app.use("/post", postRoutes)
+app.use("/posts", postRoutes)
 
-app.use("/user", userRoutes)
+app.use("/users", userRoutes)
 
-app.use("/interaction", interactionRoutes)
+app.use("/interactions", interactionRoutes)
